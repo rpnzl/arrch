@@ -50,7 +50,7 @@ class Arrch
 	 * @param   int   $limit  		The number of objects to return, setting to 0 will return all.
 	 * @param   str   $sort_key  	The array key or object property to sort by, levels separated by periods... data.somekeyindataarray
 	 * @param   str   $sort_order  	Sort the results in asc or descending order.
-	 * @return  void
+	 * @return  arr   The result array.
 	 */
 	public static function find(array &$data, array $conditions = array(), $limit = 0, $sort_key = null, $sort_order = 'ASC')
 	{
@@ -68,6 +68,8 @@ class Arrch
 		{
 			$data = array_slice($data, 0, $limit);
 		}
+
+		return $data;
 	}
 
 	/**
