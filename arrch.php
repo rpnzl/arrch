@@ -24,8 +24,8 @@
  * 			...,
  * 		);
  * 
- * 		// Query the data
- * 		$results = Arrch::find($data, array(
+ * 		// Query the data (remember, $data is passed by reference)
+ * 		Arrch::find($data, array(
  * 			array('data.children', 3),
  * 			array('first_name', 'John')
  * 		), 0, 'last_name');
