@@ -52,7 +52,7 @@ class Arrch
 	 * @param   str   $sort_order  	Sort the results in asc or descending order.
 	 * @return  void
 	 */
-	public static function find(array &$data, array $conditions = array(), $limit = 0, $sort_key, $sort_order = 'ASC')
+	public static function find(array &$data, array $conditions = array(), $limit = 0, $sort_key = null, $sort_order = 'ASC')
 	{
 		// Where
 		Arrch::where($data, $conditions);
