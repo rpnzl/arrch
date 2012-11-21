@@ -52,8 +52,18 @@ class Arrch
 	 * @param   str   $sort_order  	Sort the results in asc or descending order.
 	 * @return  arr   The result array.
 	 */
-	public static function find(array &$data, array $conditions = array(), $limit = 0, $sort_key = null, $sort_order = 'ASC')
+	public static function find(&$data, array $conditions = array(), $limit = 0, $sort_key = null, $sort_order = 'ASC')
 	{
+		// Begin with an array of data
+		$array_flag = true;
+
+		// Do we have an array?
+		if( ! is_array( $data ) )
+		{
+			$array_flag = false;
+			$data = array( $data );
+		}
+
 		// Where
 		Arrch::where($data, $conditions);
 
@@ -69,7 +79,7 @@ class Arrch
 			$data = array_slice($data, 0, $limit);
 		}
 
-		return $data;
+		return ($array_flag) ? $data : $data[0];
 	}
 
 	/**
@@ -127,6 +137,8 @@ class Arrch
 		{
 			$data = array_reverse($data);
 		}
+
+		return $data;
 	}
 
 	/**
@@ -144,16 +156,6 @@ class Arrch
 	 */
 	public static function where(array &$data, array $conditions = array())
 	{
-		// Begin with an array of data
-		$array_flag = true;
-
-		// Do we have an array?
-		if( ! is_array( $data ) )
-		{
-			$array_flag = false;
-			$data = array( $data );
-		}
-
 		// Loop array of conditions
 		foreach( $conditions as $condition )
 		{
@@ -265,6 +267,7 @@ class Arrch
 		}
 
 		$data = array_values( array_filter( $data ) );
+		return $data;
 	}
 
 
