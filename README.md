@@ -9,6 +9,8 @@ The main Arrch method, `find()`, is most commonly used and is a combination of A
 
 ### Data
 
+We need some data to start with, preferably a large array of objects or multidimensional arrays. Here's a cross section of an example array...
+
 	// this is a LARGE array of multidimensional associative arrays
 	$data = array(
 		…,
@@ -27,7 +29,10 @@ The main Arrch method, `find()`, is most commonly used and is a combination of A
 
 ### Query
 
-	// this query would find our friend, Brian
+Let's try and find Brian using a few conditions that return `true` for Brian's data.
+
+	// this query would find our friend, Brian, plus
+	// any other Brians over age 25
 	Arrch::find($data, array(
 		
 		// test for an exact match (===)
@@ -37,3 +42,27 @@ The main Arrch method, `find()`, is most commonly used and is a combination of A
 		array('age', '>', 25),
 	));
 
+## Methods
+
+also need ability to instantiate Arrch with data and just use straight methods without passing data.
+
+### Arrch::find(&$data, array $options)
+
+	$options = array(
+		'where' => array(
+			array('value', 'search_value'),
+			array('value', 'operator', 	'search_value'),
+		),
+		'limit' 		=> 0,
+		'offset' 		=> 0,
+		'sort_key'		=> null,
+		'sort_order'	=> 'ASC'
+	)
+
+### Arrch::find_one(&$data, $key)
+
+### Arrch::where()
+
+#### Operators
+
+### Arrch::sort()
