@@ -47,10 +47,13 @@ We'll use Arrch statically to try and find Brian using a few conditions that ret
 Here we'll instantiate Arrch and use the class to find Brian!
 
 	$arrch = new Arrch($data);
-	$results = $arrch->find(, array(
+	$results = $arrch->find(array(
 		array('first_name', 'Brian'),
 		array('age', '>', 25),
 	));
+
+	// use different data...
+	$arrch->set_data($new_data);
 
 ## Methods
 
