@@ -35,11 +35,13 @@ We'll use Arrch statically to try and find Brian using a few conditions that ret
 	// any other Brians over age 25
 	$results = Arrch::find($data, array(
 
-		// test for an exact match (===)
-		array('first_name', 'Brian'),
+		'where' => array(
+			// test for an exact match (===)
+			array('first_name', 'Brian'),
 
-		// use an operator
-		array('age', '>', 25),
+			// use an operator
+			array('age', '>', 25),
+		),
 	));
 
 ### Instantiated Usage
@@ -48,8 +50,10 @@ Here we'll instantiate Arrch and use the class to find Brian!
 
 	$arrch = new Arrch($data);
 	$results = $arrch->find(array(
-		array('first_name', 'Brian'),
-		array('age', '>', 25),
+		'where' => array(
+			array('first_name', 'Brian'),
+			array('age', '>', 25),
+		),
 	));
 
 	// use different data...
@@ -62,7 +66,7 @@ Here we'll instantiate Arrch and use the class to find Brian!
 	$options = array(
 		'where' => array(
 			array('value', 'search_value'),
-			array('value', 'operator', 	'search_value'),
+			array('value', 'operator', 'search_value'),
 		),
 		'limit' 		=> 0,
 		'offset' 		=> 0,
