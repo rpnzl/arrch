@@ -46,7 +46,7 @@ Let's try and find Brian using a few conditions that return `true` for Brian's d
 
 also need ability to instantiate Arrch with data and just use straight methods without passing data.
 
-### Arrch::find(&$data, array $options)
+### Arrch::find(&$data, array $options, $key = null)
 
 	$options = array(
 		'where' => array(
@@ -58,8 +58,6 @@ also need ability to instantiate Arrch with data and just use straight methods w
 		'sort_key'		=> null,
 		'sort_order'	=> 'ASC'
 	)
-
-### Arrch::find_one(&$data, $key)
 
 ### Arrch::where()
 
