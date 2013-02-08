@@ -6,8 +6,8 @@
  * @copyright  2012
  * @author     Michael Giuliana
  * @link       http://rpnzl.com
- * @version    1.0
- * @since      2012/11
+ * @version    1.1
+ * @since      2013/2
  * @license    MIT License - http://opensource.org/licenses/MIT
  * 
  * A small library of array search and sort methods. Perhaps most
@@ -17,9 +17,9 @@
 class Arrch
 {
     /**
-     * @var  arr  $_defaults  The find() method default values.
+     * @var  arr  $defaults  The find() method default values.
      */
-    public static $_defaults = array(
+    public static $defaults = array(
         'where'         => array(),
         'limit'         => 0,
         'offset'        => 0,
@@ -28,110 +28,14 @@ class Arrch
     );
 
     /**
-     * @var  str  $_val_split  The string to designate multiple potential values in conditions.
+     * @var  str  $key_split  The string to split keys when checking a deep multidimensional array value.
      */
-    public static $_val_split = '|';
+    public static $key_split = '.';
 
     /**
-     * @var  str  $_key_split  The string to split keys when checking a deep multidimensional array value.
+     * 
      */
-    public static $_key_split = '.';
-
-    /* ---------------------------------------------------------------------------------
-     *
-     * Utilities
-     * 
-     * -------------------------------------------------------------------------------*/
-
-    /**
-     * Magic method for instantiated usage.
-     * 
-     * @param   str  $name  The method name that was called.
-     * @param   arr  $args  An array of arguments passed to the method.
-     * @return  arr  The modified array of data.
-     */
-    public function __call($name, $args)
-    {
-        // Must pass data by reference
-        array_unshift($args, &$this->_data);
-        return Arrch::_methods($name, $args);
-    }
-
-    /**
-     * Magic method for static usage.
-     * 
-     * @param   str  $name  The method name that was called.
-     * @param   arr  $args  An array of arguments passed to the method.
-     * @return  arr  The modified array of data.
-     */
-    public static function __callStatic($name, $args)
-    {
-        // Must pass data by reference
-        $args[0] = &$args[0];
-        return Arrch::_methods($name, $args);
-    }
-
-    /**
-     * Maps function calls to the appropriate Arrch method.
-     * 
-     * @param   str  $name  The method name that was called.
-     * @param   arr  $args  An array of arguments passed to the method.
-     * @return  arr  The modified array of data.
-     */
-    private static function _methods($name, $args)
-    {
-        if(method_exists('Arrch', '_'.$name))
-        {
-            return call_user_func_array(array('Arrch', '_'.$name), $args);
-        }
-        else
-        {
-            throw new Exception('Arrch doesn\'t contain that method!', 1);
-        }
-    }
-
-    /* ---------------------------------------------------------------------------------
-     *
-     * Instantiated Usage
-     * 
-     * -------------------------------------------------------------------------------*/
-
-    /**
-     * @var  arr  $_data  The data we're searching.
-     */
-    public $_data;
-
-    /**
-     * Set the data upon instantiation.
-     * 
-     * @param   arr  $data  The array of data to search and sort.
-     * @return  void
-     */
-    public function __construct(array $data)
-    {
-        $this->_data = $data;
-    }
-
-    /**
-     * Update the data array.
-     * 
-     * @param   arr  $data  The array of data to search.
-     */
-    public function set_data(array $data)
-    {
-        if(isset($data))
-        {
-            $this->_data = $data;
-        }
-
-        return $this;
-    }
-
-    /* ---------------------------------------------------------------------------------
-     *
-     * Static Usage
-     * 
-     * -------------------------------------------------------------------------------*/
+    public static $operators = array('=', '==', '===', '!=', '!==', '>', '<', '>=', '<=');
 
     /**
      * Find
@@ -142,44 +46,29 @@ class Arrch
      * array items. Will only sort if a sort key is set.
      * 
      * @param   arr    &$data     The array of objects or associative arrays to search.
-     * @param   arr    $options   The query options, see Arrch::$_defaults.
+     * @param   arr    $options   The query options, see Arrch::$defaults.
      * @param   misc   $key       An item's key or index value.
      * @return  arr    The result array.
      */
-    public static function _find(array &$data, array $options = array(), $key = null)
+    public static function find(array $data, array $options = array(), $key = 'all')
     {
-        /**
-         * Parameters
-         */
-        $options = array_merge(Arrch::$_defaults, $options);
-
-        /**
-         * Find One
-         */
-        if($key !== null)
-        {
-            $data = isset($data[$key]) ? $data[$key] : null;
-            return $data;
-        }
-
-        /**
-         * Find Many
-         */
-        else
-        {
-            // Where
-            Arrch::_where($data, $options['where']);
-
-            // Sort
-            if( ! empty($options['sort_key']))
-            {
-                Arrch::_sort($data, $options['sort_key'], $options['sort_order']);
-            }
-
-            // Limit
-            $data = array_slice($data, $options['offset'], ($options['limit'] == 0) ? null : $options['limit']);
-
-            return $data;
+        $options = array_merge(static::$defaults, $options);
+        $data = static::where($data, $options['where']);
+        $data = $options['sort_key'] ? static::sort($data, $options['sort_key'], $options['sort_order']) : $data;
+        $data = array_slice($data, $options['offset'], ($options['limit'] == 0) ? null : $options['limit'], true);
+        switch ($key) {
+            case 'all':
+                return $data;
+                break;
+            case 'first':
+                return array_shift($data);
+                break;
+            case 'last':
+                return array_pop($data);
+                break;
+            default:
+                return isset($data[$key]) ? $data[$key] : null;
+                break;
         }
     }
 
@@ -193,53 +82,26 @@ class Arrch
      * @param   str   $order   ASC or DESC.
      * @return  arr   The result array.
      */
-    public static function _sort(array &$data, $key, $order = null)
+    public static function sort(array $data, $key, $order = null)
     {
-        // Default sort order
-        $order = $order ?: Arrch::$_defaults['sort_order'];
-
-        // Sort by key, maintain indexes
-        uasort($data, function($a, $b) use ($key)
-        {
-            // Extract values
-            $a_val = Arrch::extract_value($a, $key);
-            $b_val = Arrch::extract_value($b, $key);
+        uasort($data, function ($a, $b) use ($key) {
+            $a_val = Arrch::extractValue($a, $key);
+            $b_val = Arrch::extractValue($b, $key);
 
             // Strings
-            if(is_string($a_val) && is_string($b_val))
-            {
+            if (is_string($a_val) && is_string($b_val)) {
                 return strcasecmp($a_val, $b_val);
-            }
-            // Ints & Floats
-            elseif(is_int($a_val) && is_int($b_val) || is_float($a_val) && is_float($b_val))
-            {
-                if($a_val == $b_val)
-                {
+            } else {
+                if ($a_val == $b_val) {
                     return 0;
-                }
-                else
-                {
+                } else {
                     return ($a_val > $b_val) ? 1 : -1;
-                }
-            }
-            // Bools
-            elseif(is_bool($a_val) && is_bool($b_val))
-            {
-                if($a_val == $b_val)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return ($a_val == true) ? 1 : -1;
                 }
             }
         });
 
-        // Descending order
-        if(strtoupper($order) == 'DESC')
-        {
-            $data = array_reverse($data);
+        if (strtoupper($order ?: Arrch::$defaults['sort_order']) == 'DESC') {
+            $data = array_reverse($data, true);
         }
 
         return $data;
@@ -258,112 +120,88 @@ class Arrch
      * @param   arr   $conditions   The conditions to evaluate against.
      * @return  arr   The result array.
      */
-    public static function _where(array &$data, array $conditions = array())
+    public static function where(array $data, array $conditions = array())
     {
-        // Loop array of conditions
-        foreach($conditions as $condition)
-        {
-            /**
-             * Condition is an array:
-             *      array( 'key', 'value' )
-             *      array( 'key', 'operator', 'value' )
-             */
-            if(is_array($condition))
-            {
-                array_walk($data, function(&$item, $key, $condition) use (&$data) {
-
-                    // Does the property exist?
-                    if(count($condition) <= 3)
-                    {
-                        // only one value?
-                        $operator = isset($condition[2]) ? $condition[1] : '===';
-                        $search_value = isset($condition[2]) ? $condition[2] : $condition[1];
-                        $value = Arrch::extract_value($item, $condition[0]);
-
-                        // The test value must equal something
-                        if(!empty($search_value))
-                        {
-                            // check if multiple values exist
-                            if(strstr($search_value, Arrch::$_val_split))
-                            {
-                                // Split values
-                                $values = explode(Arrch::$_val_split, $search_value);
-
-                                // Loop and add matches
-                                $matches = 0;
-                                foreach($values as $search_value)
-                                {
-                                    $compare = array($value, $operator, $search_value);
-                                    if(Arrch::compare($compare))
-                                    {
-                                        $matches++;
-                                    }
-                                }
-
-                                // No matches? Delete.
-                                if($matches < 1)
-                                {
-                                    unset($data[$key]);
+        foreach ($conditions as $condition) {
+            if (is_array($condition)) {
+                array_map(function ($item, $key) use (&$data, $condition) {
+                    $return = 0;
+                    $operator = isset($condition[2]) ? $condition[1] : '===';
+                    $search_value = isset($condition[2]) ? $condition[2] : $condition[1];
+                    if (is_array($condition[0])) {
+                        // array of keys
+                        if (is_array($search_value)) {
+                            // array of values
+                            foreach ($condition[0] as $prop) {
+                                $value = static::extractValues($item, $prop);
+                                foreach ($search_value as $query_val) {
+                                    $return += static::compare(array($value, $operator, $query_val)) ? 1 : 0;
                                 }
                             }
-
-                            // Single value
-                            else
-                            {
-                                $compare = array($value, $operator, $search_value);
-                                if(!Arrch::compare($compare))
-                                {
-                                    unset($data[$key]);
-                                }
+                        } else {
+                            // single value
+                            foreach ($condition[0] as $prop) {
+                                $value = static::extractValues($item, $prop);
+                                $return += static::compare(array($value, $operator, $search_value)) ? 1 : 0;
                             }
                         }
-                        else
-                        {
-                            unset($data[$key]);
+                    } elseif (is_array($search_value)) {
+                        // single key, array of query values
+                        $value = static::extractValues($item, $condition[0]);
+                        foreach ($search_value as $query_val) {
+                            $return += static::compare(array($value, $operator, $query_val)) ? 1 : 0;
                         }
-                    }
-                    else
-                    {
-                        // OR
-                        if(in_array('or', $condition))
-                        {
-                            $matches = 0;
-                            $search_value = array_pop($condition);
-                            $operator = array_pop($condition);
-                            foreach($condition as $or)
-                            {
-                                if($or !== 'or')
-                                {
-                                    // Get the or value
-                                    $value = Arrch::extract_value($item, $or);
-
-                                    // Is the value empty?
-                                    if(!empty($value))
-                                    {
-                                        $compare = array($value, $operator, $search_value);
-                                        if(Arrch::compare($compare))
-                                        {
-                                            ++$matches;
-                                        }
-                                    }
-                                }
-                            }
-
-                            // All the ORs failed
-                            if($matches === 0)
-                            {
-                                unset($data[$key]);
-                            }
-                        }
+                    } else {
+                        // single key, single value
+                        $value = static::extractValues($item, $condition[0]);
+                        $return = static::compare(array($value, $operator, $search_value));
                     }
 
-                }, $condition);
+                    // Unset
+                    if (!$return) {
+                        unset($data[$key]);
+                    }
+                }, $data, array_keys($data));
             }
         }
-
         return $data;
     }
 
+    /**
+     * 
+     */
+    public static function extractValues($item, $key)
+    {
+        $results = array();
+        $item = is_object($item) ? (array) $item : $item;
+        $keys = strstr($key, static::$key_split) ? explode(static::$key_split, $key) : array($key);
+        $i = 0;
+        $count = count($keys) - 1;
+        foreach ($keys as $key) {
+            if (is_array($item)) {
+                if (array_key_exists($key, $item)) {
+                    if ($i < $count) {
+                        $item = $item[$key];
+                    } else {
+                        if (is_array($item[$key])) {
+                            $results = array_merge($results, $item[$key]);
+                        } else {
+                            $results[] = $item[$key];
+                        }
+                    }
+                } elseif (is_array(array_shift(array_values($item))) && array_key_exists($key, array_shift(array_values($item)))) {
+                    // array key exists in items child
+                    foreach ($item as $child) {
+                        $results = array_merge($results, static::extractValues($child, $key));
+                    }
+                }
+            } else {
+                $results[] = $item;
+            }
+            $i++;
+        }
+        return $results;
+    }
 
     /**
      * Extract Value
@@ -375,25 +213,18 @@ class Arrch
      * @param    str     $key    The key or key path to the desired value.
      * @return   mixed   The found value or null.
      */
-    public static function extract_value($item, $key)
+    public static function extractValue($item, $key)
     {
         $item = is_object($item) ? (array) $item : $item;
-
-        if(strstr($key, Arrch::$_key_split))
-        {
-            $keys = explode(Arrch::$_key_split, $key);
-            foreach($keys as $key)
-            {
-                if(is_array($item))
-                {
+        if (strstr($key, Arrch::$key_split)) {
+            $keys = explode(Arrch::$key_split, $key);
+            foreach ($keys as $key) {
+                if (is_array($item)) {
                     $item = $item[$key];
                 }
             }
-
             $item = isset($item) ? $item : null;
-        }
-        else
-        {
+        } else {
             $item = $item[$key];
         }
 
@@ -416,94 +247,58 @@ class Arrch
      */
     public static function compare(array $array)
     {
-        // Switches
-        switch(count($array))
-        {
-            case 2:
-                if($array[0] !== $array[1])
-                    return false;
-                break;
-
-            case 3:
-                switch( $array[1] )
-                {
-                    case('!='):
-                        if($array[0] == $array[2])
-                            return false;
+        $return = 0;
+        foreach ($array[0] as $value) {
+            if ($array[1] === '~') {
+                // If the variables don't immediately match
+                if ($array[0] !== $array[2]) {
+                    // strings
+                    if (is_string($array[0]) && is_string($array[2])) {
+                        return stristr($array[0], $array[2]);
+                    } elseif (is_array($array[0]) && is_array($array[2])) {
+                        //
+                    } elseif (is_object($array[0]) && is_object($array[2])) {
+                        //
+                    } elseif (gettype($array[0]) !== gettype($array[2])) {
+                        return false;
+                    } else {
+                        return false;
+                    }
+                }
+            } elseif (in_array($array[1], static::$operators)) {
+                switch ($array[1]) {
+                    case '=':
+                        $return += ($value = $array[2]) ? 1 : 0;
                         break;
-
-                    case('!=='):
-                        if($array[0] === $array[2])
-                            return false;
+                    case '==':
+                        $return += ($value == $array[2]) ? 1 : 0;
                         break;
-
-                    case('=='):
-                        if($array[0] != $array[2])
-                            return false;
+                    case '===':
+                        $return += ($value === $array[2]) ? 1 : 0;
                         break;
-
-                    case('==='):
-                        if($array[0] !== $array[2])
-                            return false;
+                    case '!=':
+                        $return += ($value != $array[2]) ? 1 : 0;
                         break;
-
-                    case('<'):
-                        if($array[0] >= $array[2])
-                            return false;
+                    case '!==':
+                        $return += ($value !== $array[2]) ? 1 : 0;
                         break;
-
-                    case('>'):
-                        if($array[0] <= $array[2])
-                            return false;
+                    case '>':
+                        $return += ($value > $array[2]) ? 1 : 0;
                         break;
-
-                    case('<='):
-                        if($array[0] > $array[2])
-                            return false;
+                    case '<':
+                        $return += ($value < $array[2]) ? 1 : 0;
                         break;
-
-                    case('>='):
-                        if($array[0] < $array[2])
-                            return false;
+                    case '>=':
+                        $return += ($value >= $array[2]) ? 1 : 0;
                         break;
-
-                    case('~'):
-                        // If the variables don't immediately match
-                        if($array[0] !== $array[2])
-                        {
-                            // strings
-                            if(is_string($array[0]) && is_string($array[2]))
-                            {
-                                if(!stristr($array[0], $array[2]))
-                                {
-                                    return false;
-                                }
-                            }
-                            // arrays
-                            elseif(is_array($array[0]) && is_array($array[2]))
-                            {}
-                            // objects
-                            elseif(is_object($array[0]) && is_object($array[2]))
-                            {}
-                            // types
-                            elseif(gettype($array[0]) !== gettype($array[2]))
-                            {
-                                return false;
-                            }
-                            // catch all
-                            else
-                            {
-                                return false;
-                            }
-                        }
+                    case '<=':
+                        $return += ($value <= $array[2]) ? 1 : 0;
+                        break;
+                    default:
                         break;
                 }
-                break;
-
-            default:
-                break;
+            }
         }
-
-        return true;
+        return $return;
     }
 }
