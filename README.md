@@ -17,52 +17,59 @@ We need some data to start with, preferably a large array of objects or multidim
 		4037 => array(
 			'first_name'	=> 'Brian',
 			'last_name'		=> 'Searchable',
-			'age'			=> 27,
-			'email'			=> 'bsearchable@example.com',
+			'age'		=> 27,
+			'email'		=> 'bsearchable@example.com',
 			'favorites'		=> array(
-				'color'			=> 'blue',
+				'color'		=> 'blue',
 				'number'		=> 4,
 			),
 		),
 		…,
 	);
 
-### Query
+### Static Usage
 
-Let's try and find Brian using a few conditions that return `true` for Brian's data.
+We'll use Arrch statically to try and find Brian using a few conditions that return `true` for Brian's data.
 
 	// this query would find our friend, Brian, plus
 	// any other Brians over age 25
-	Arrch::find($data, array(
-		
-		// test for an exact match (===)
-		array('first_name', 'Brian'),
-		
-		// use an operator
-		array('age', '>', 25),
+	$results = Arrch::find($data, array(
+
+		'where' => array(
+			// test for an exact match (===)
+			array('first_name', 'Brian'),
+
+			// use an operator
+			array('age', '>', 25),
+		),
 	));
+
+### Instantiated Usage
+
+Here we'll instantiate Arrch and use the class to find Brian!
+
+	$arrch = new Arrch($data);
+	$results = $arrch->find(array(
+		'where' => array(
+			array('first_name', 'Brian'),
+			array('age', '>', 25),
+		),
+	));
+
+	// use different data...
+	$arrch->set_data($new_data);
 
 ## Methods
 
-also need ability to instantiate Arrch with data and just use straight methods without passing data.
-
-### Arrch::find(&$data, array $options)
+### Arrch::find(&$data, array $options, $key = null)
 
 	$options = array(
 		'where' => array(
 			array('value', 'search_value'),
-			array('value', 'operator', 	'search_value'),
+			array('value', 'operator', 'search_value'),
 		),
 		'limit' 		=> 0,
 		'offset' 		=> 0,
 		'sort_key'		=> null,
 		'sort_order'	=> 'ASC'
 	)
-
-### Arrch::find_one(&$data, $key)
-
-### Arrch::where()
-
-#### Operators
-
-### Arrch::sort()
