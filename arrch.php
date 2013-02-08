@@ -168,7 +168,14 @@ class Arrch
     }
 
     /**
+     * Extract Values
      * 
+     * Finds the requested value in a multidimensional
+     * array or an object and returns it.
+     * 
+     * @param    mixed   $item   The item containing the value.
+     * @param    str     $key    The key or key path to the desired value.
+     * @return   mixed   The found value or null.
      */
     public static function extractValues($item, $key)
     {
@@ -201,34 +208,6 @@ class Arrch
             $i++;
         }
         return $results;
-    }
-
-    /**
-     * Extract Value
-     * 
-     * Finds the requested value in a multidimensional
-     * array or an object and returns it.
-     * 
-     * @param    mixed   $item   The item containing the value.
-     * @param    str     $key    The key or key path to the desired value.
-     * @return   mixed   The found value or null.
-     */
-    public static function extractValue($item, $key)
-    {
-        $item = is_object($item) ? (array) $item : $item;
-        if (strstr($key, Arrch::$key_split)) {
-            $keys = explode(Arrch::$key_split, $key);
-            foreach ($keys as $key) {
-                if (is_array($item)) {
-                    $item = $item[$key];
-                }
-            }
-            $item = isset($item) ? $item : null;
-        } else {
-            $item = $item[$key];
-        }
-
-        return $item;
     }
 
     /**
