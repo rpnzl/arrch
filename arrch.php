@@ -1,9 +1,11 @@
 <?php
 
+namespace Arrch;
+
 /**
  * Arrch
  * 
- * @copyright  2012
+ * @copyright  2012 - 2013
  * @author     Michael Giuliana
  * @link       http://rpnzl.com
  * @version    1.1
@@ -35,7 +37,7 @@ class Arrch
     /**
      * 
      */
-    public static $operators = array('=', '==', '===', '!=', '!==', '>', '<', '>=', '<=');
+    public static $operators = array('=', '==', '===', '!=', '!==', '>', '<', '>=', '<=', '~');
 
     /**
      * Find
@@ -85,8 +87,8 @@ class Arrch
     public static function sort(array $data, $key, $order = null)
     {
         uasort($data, function ($a, $b) use ($key) {
-            $a_val = Arrch::extractValue($a, $key);
-            $b_val = Arrch::extractValue($b, $key);
+            $a_val = Arrch::extractValues($a, $key);
+            $b_val = Arrch::extractValues($b, $key);
 
             // Strings
             if (is_string($a_val) && is_string($b_val)) {
@@ -133,28 +135,28 @@ class Arrch
                         if (is_array($search_value)) {
                             // array of values
                             foreach ($condition[0] as $prop) {
-                                $value = static::extractValues($item, $prop);
+                                $value = Arrch::extractValues($item, $prop);
                                 foreach ($search_value as $query_val) {
-                                    $return += static::compare(array($value, $operator, $query_val)) ? 1 : 0;
+                                    $return += Arrch::compare(array($value, $operator, $query_val)) ? 1 : 0;
                                 }
                             }
                         } else {
                             // single value
                             foreach ($condition[0] as $prop) {
-                                $value = static::extractValues($item, $prop);
-                                $return += static::compare(array($value, $operator, $search_value)) ? 1 : 0;
+                                $value = Arrch::extractValues($item, $prop);
+                                $return += Arrch::compare(array($value, $operator, $search_value)) ? 1 : 0;
                             }
                         }
                     } elseif (is_array($search_value)) {
                         // single key, array of query values
-                        $value = static::extractValues($item, $condition[0]);
+                        $value = Arrch::extractValues($item, $condition[0]);
                         foreach ($search_value as $query_val) {
-                            $return += static::compare(array($value, $operator, $query_val)) ? 1 : 0;
+                            $return += Arrch::compare(array($value, $operator, $query_val)) ? 1 : 0;
                         }
                     } else {
                         // single key, single value
-                        $value = static::extractValues($item, $condition[0]);
-                        $return = static::compare(array($value, $operator, $search_value));
+                        $value = Arrch::extractValues($item, $condition[0]);
+                        $return = Arrch::compare(array($value, $operator, $search_value));
                     }
 
                     // Unset
@@ -179,34 +181,47 @@ class Arrch
      */
     public static function extractValues($item, $key)
     {
+        // Array of results
         $results = array();
+
+        // Cast as array if object
         $item = is_object($item) ? (array) $item : $item;
+
+        // Array of keys
         $keys = strstr($key, static::$key_split) ? explode(static::$key_split, $key) : array($key);
-        $i = 0;
-        $count = count($keys) - 1;
-        foreach ($keys as $key) {
-            if (is_array($item)) {
-                if (array_key_exists($key, $item)) {
-                    if ($i < $count) {
-                        $item = $item[$key];
-                    } else {
-                        if (is_array($item[$key])) {
-                            $results = array_merge($results, $item[$key]);
-                        } else {
-                            $results[] = $item[$key];
+        $keys = array_filter($keys);
+
+        // Key count
+        $key_count = count($keys);
+
+        // key count > 0
+        if ($key_count > 0) {
+
+                $curr_key = array_shift($keys);
+                $child = array_shift(array_values($item));
+
+                // it's an array
+                if (is_array($item)) {
+                    
+                    // it has the key
+                    if (array_key_exists($curr_key, $item)) {
+                        $results = array_merge($results, static::extractValues($item[$curr_key], implode(static::$key_split, $keys)));
+
+                    // else it's child has the key
+                    } elseif ((is_array($child) || is_object($child)) && array_key_exists($curr_key, $child)) {
+                        foreach ($item as $child) {
+                            $results = array_merge($results, static::extractValues($child, $key));
                         }
                     }
-                } elseif (is_array(array_shift(array_values($item))) && array_key_exists($key, array_shift(array_values($item)))) {
-                    // array key exists in items child
-                    foreach ($item as $child) {
-                        $results = array_merge($results, static::extractValues($child, $key));
-                    }
                 }
-            } else {
-                $results[] = $item;
-            }
-            $i++;
+
+        // no key
+        } else {
+
+            // set to item or null
+            $results[] = isset($item[$key]) ? $item[$key] : $item;
         }
+
         return $results;
     }
 
@@ -230,19 +245,21 @@ class Arrch
         foreach ($array[0] as $value) {
             if ($array[1] === '~') {
                 // If the variables don't immediately match
-                if ($array[0] !== $array[2]) {
+                if ($value !== $array[2]) {
                     // strings
-                    if (is_string($array[0]) && is_string($array[2])) {
-                        return stristr($array[0], $array[2]);
-                    } elseif (is_array($array[0]) && is_array($array[2])) {
+                    if (is_string($value) && is_string($array[2])) {
+                        return stristr($value, $array[2]);
+                    } elseif (is_array($value) && is_array($array[2])) {
                         //
-                    } elseif (is_object($array[0]) && is_object($array[2])) {
+                    } elseif (is_object($value) && is_object($array[2])) {
                         //
-                    } elseif (gettype($array[0]) !== gettype($array[2])) {
+                    } elseif (gettype($value) !== gettype($array[2])) {
                         return false;
                     } else {
                         return false;
                     }
+                } else {
+                    return true;
                 }
             } elseif (in_array($array[1], static::$operators)) {
                 switch ($array[1]) {

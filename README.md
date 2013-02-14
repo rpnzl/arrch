@@ -27,7 +27,7 @@ We need some data to start with, preferably a large array of objects or multidim
 		…,
 	);
 
-### Static Usage
+### Example
 
 We'll use Arrch statically to try and find Brian using a few conditions that return `true` for Brian's data.
 
@@ -44,24 +44,9 @@ We'll use Arrch statically to try and find Brian using a few conditions that ret
 		),
 	));
 
-### Instantiated Usage
-
-Here we'll instantiate Arrch and use the class to find Brian!
-
-	$arrch = new Arrch($data);
-	$results = $arrch->find(array(
-		'where' => array(
-			array('first_name', 'Brian'),
-			array('age', '>', 25),
-		),
-	));
-
-	// use different data...
-	$arrch->set_data($new_data);
-
 ## Methods
 
-### Arrch::find(&$data, array $options, $key = null)
+### Arrch::find($data, array $options, $key = null)
 
 	$options = array(
 		'where' => array(
