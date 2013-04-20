@@ -13,9 +13,12 @@ namespace Arrch;
  * @license    MIT License - http://opensource.org/licenses/MIT
  * 
  * A small library of array search and sort methods. Perhaps most
- * useful paired with a simple, flat-file cache system, Arrch
+ * useful paired with a simple, flat-file storage system, Arrch
  * allows psuedo-queries of large arrays.
+ * 
  */
+interface Exception {}
+class UnexpectedValueException extends \UnexpectedValueException implements Exception {}
 class Arrch
 {
     /**
@@ -35,19 +38,16 @@ class Arrch
     public static $key_split = '.';
 
     /**
-     * 
+     * @var  arr  $operators  A list of valid operators for comparisons.
      */
     public static $operators = array('=', '==', '===', '!=', '!==', '>', '<', '>=', '<=', '~');
 
     /**
-     * Find
-     * 
-     * This method combines the functionality of the
-     * where() and sort() methods, with additional
-     * limit and offset parameters. Returns an array of matching
+     * This method combines the functionality of the where() and sort() methods,
+     * with additional limit and offset parameters. Returns an array of matching
      * array items. Will only sort if a sort key is set.
      * 
-     * @param   arr    &$data     The array of objects or associative arrays to search.
+     * @param   arr    $data      The array of objects or associative arrays to search.
      * @param   arr    $options   The query options, see Arrch::$defaults.
      * @param   misc   $key       An item's key or index value.
      * @return  arr    The result array.
@@ -75,11 +75,9 @@ class Arrch
     }
 
     /**
-     * Sort
-     * 
      * Sorts an array of objects by the specified key.
      * 
-     * @param   arr   &$data   The array of objects or associative arrays to sort.
+     * @param   arr   $data    The array of objects or associative arrays to sort.
      * @param   str   $key     The object key or key path to use in sort evaluation.
      * @param   str   $order   ASC or DESC.
      * @return  arr   The result array.
@@ -110,15 +108,13 @@ class Arrch
     }
 
     /**
-     * Where
-     * 
      * Evaluates an object based on an array of conditions
      * passed into the function, formatted like so...
      * 
      *      array( 'name', 'arlington' );
      *      array( 'name', '!=', 'arlington' );
      * 
-     * @param   arr   &$data        The array of objects or associative arrays to search.
+     * @param   arr   $data         The array of objects or associative arrays to search.
      * @param   arr   $conditions   The conditions to evaluate against.
      * @return  arr   The result array.
      */
@@ -128,8 +124,8 @@ class Arrch
             if (is_array($condition)) {
                 array_map(function ($item, $key) use (&$data, $condition) {
                     $return = 0;
-                    $operator = isset($condition[2]) ? $condition[1] : '===';
-                    $search_value = isset($condition[2]) ? $condition[2] : $condition[1];
+                    $operator = array_key_exists(2, $condition) ? $condition[1] : '===';
+                    $search_value = array_key_exists(2, $condition) ? $condition[2] : $condition[1];
                     if (is_array($condition[0])) {
                         // array of keys
                         if (is_array($search_value)) {
@@ -164,16 +160,16 @@ class Arrch
                         unset($data[$key]);
                     }
                 }, $data, array_keys($data));
+            } else {
+                throw new UnexpectedValueException('Condition '.var_export($condition, true).' must be an array!');
             }
         }
         return $data;
     }
 
     /**
-     * Extract Values
-     * 
-     * Finds the requested value in a multidimensional
-     * array or an object and returns it.
+     * Finds the requested value in a multidimensional array or an object and
+     * returns it.
      * 
      * @param    mixed   $item   The item containing the value.
      * @param    str     $key    The key or key path to the desired value.
@@ -198,7 +194,7 @@ class Arrch
         if ($key_count > 0) {
 
                 $curr_key = array_shift($keys);
-                $child = array_shift(array_values($item));
+                $child = is_array($item) ? array_shift(array_values($item)) : null;
 
                 // it's an array
                 if (is_array($item)) {
@@ -206,35 +202,36 @@ class Arrch
                     // it has the key
                     if (array_key_exists($curr_key, $item)) {
                         $results = array_merge($results, static::extractValues($item[$curr_key], implode(static::$key_split, $keys)));
-
                     // else it's child has the key
-                    } elseif ((is_array($child) || is_object($child)) && array_key_exists($curr_key, $child)) {
-                        foreach ($item as $child) {
-                            $results = array_merge($results, static::extractValues($child, $key));
+                    } elseif ((is_array($child) || is_object($child))) {
+                        if (array_key_exists($curr_key, $child)) {
+                            foreach ($item as $child) {
+                                $results = array_merge($results, static::extractValues($child, $key));
+                            }
                         }
                     }
                 }
 
         // no key
         } else {
-
-            // set to item or null
-            $results[] = isset($item[$key]) ? $item[$key] : $item;
+            if (is_array($item)) {
+                foreach ($item as $child) {
+                    $results[] = $child;
+                }
+            } else {
+                $results[] = $item;
+            }
         }
-
         return $results;
     }
 
     /**
-     * Compare
+     * Runs comparison operations on an array of values formatted like so...
      * 
-     * Runs comparison operations on an array of values
-     * formatted like so...
+     *      e.g. array($value, $operator, $value)
      * 
-     *      e.g. array( $value, $operator, $search_value )
-     * 
-     * Returns true or false depending on the outcome of the
-     * requested comparative operation (<, >, =, etc..).
+     * Returns true or false depending on the outcome of the requested
+     * comparative operation (<, >, =, etc..).
      * 
      * @param   arr   $array  The comparison array.
      * @return  bool  Whether the operation evaluates to true or false.
@@ -245,14 +242,13 @@ class Arrch
         foreach ($array[0] as $value) {
             if ($array[1] === '~') {
                 // If the variables don't immediately match
-                if ($value !== $array[2]) {
-                    // strings
+                if ($value != $array[2]) {
                     if (is_string($value) && is_string($array[2])) {
                         return stristr($value, $array[2]);
                     } elseif (is_array($value) && is_array($array[2])) {
-                        //
+                        throw new UnexpectedValueException('Cannot compare arrays!');
                     } elseif (is_object($value) && is_object($array[2])) {
-                        //
+                        throw new UnexpectedValueException('Cannot compare objects!');
                     } elseif (gettype($value) !== gettype($array[2])) {
                         return false;
                     } else {
@@ -261,37 +257,36 @@ class Arrch
                 } else {
                     return true;
                 }
-            } elseif (in_array($array[1], static::$operators)) {
-                switch ($array[1]) {
-                    case '=':
-                        $return += ($value = $array[2]) ? 1 : 0;
-                        break;
-                    case '==':
-                        $return += ($value == $array[2]) ? 1 : 0;
-                        break;
-                    case '===':
-                        $return += ($value === $array[2]) ? 1 : 0;
-                        break;
-                    case '!=':
-                        $return += ($value != $array[2]) ? 1 : 0;
-                        break;
-                    case '!==':
-                        $return += ($value !== $array[2]) ? 1 : 0;
-                        break;
-                    case '>':
-                        $return += ($value > $array[2]) ? 1 : 0;
-                        break;
-                    case '<':
-                        $return += ($value < $array[2]) ? 1 : 0;
-                        break;
-                    case '>=':
-                        $return += ($value >= $array[2]) ? 1 : 0;
-                        break;
-                    case '<=':
-                        $return += ($value <= $array[2]) ? 1 : 0;
-                        break;
-                    default:
-                        break;
+            } else {
+                if (in_array($array[1], static::$operators)) {
+                    switch ($array[1]) {
+                        case '==':
+                            $return += ($value == $array[2]) ? 1 : 0;
+                            break;
+                        case '===':
+                            $return += ($value === $array[2]) ? 1 : 0;
+                            break;
+                        case '!=':
+                            $return += ($value != $array[2]) ? 1 : 0;
+                            break;
+                        case '!==':
+                            $return += ($value !== $array[2]) ? 1 : 0;
+                            break;
+                        case '>':
+                            $return += ($value > $array[2]) ? 1 : 0;
+                            break;
+                        case '<':
+                            $return += ($value < $array[2]) ? 1 : 0;
+                            break;
+                        case '>=':
+                            $return += ($value >= $array[2]) ? 1 : 0;
+                            break;
+                        case '<=':
+                            $return += ($value <= $array[2]) ? 1 : 0;
+                            break;
+                    }
+                } else {
+                    throw new UnexpectedValueException('Comparison operator is not valid.');
                 }
             }
         }
