@@ -106,7 +106,7 @@ http://opensource.org/licenses/MIT
 
 #### Author
 
-Michael Giuliana
-[rpnzl.com](http://rpnzl.com)
-[github.com/rpnzl](http://www.github.com/rpnzl)
-[@rpnzldesign](http://www.twitter.com/rpnzldesign)
+* Michael Giuliana
+* [rpnzl.com](http://rpnzl.com)
+* [github.com/rpnzl](http://www.github.com/rpnzl)
+* [@rpnzldesign](http://www.twitter.com/rpnzldesign)
