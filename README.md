@@ -12,7 +12,7 @@ We need some data to start with, preferably a large array of objects or multidim
 
     // this is a LARGE array of multidimensional arrays
     $data = array(
-        …,
+        ...,
         4037 => array(
             'name'  => array(
                 'first' => 'Brian',
@@ -27,7 +27,7 @@ We need some data to start with, preferably a large array of objects or multidim
                 'sauce' => 'duck'
             ),
         ),
-        …,
+        ...,
     );
 
 #### Find() Method
