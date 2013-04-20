@@ -10,7 +10,7 @@ The main Arrch method, `find()`, is most commonly used and is a combination of A
 
 We need some data to start with, preferably a large array of objects or multidimensional arrays. Here's a cross section of an example array...
 
-    // this is a LARGE array of multidimensional associative arrays
+    // this is a LARGE array of multidimensional arrays
     $data = array(
         …,
         4037 => array(
@@ -30,6 +30,22 @@ We need some data to start with, preferably a large array of objects or multidim
         …,
     );
 
+#### Find() Method
+
+This is the method you'll probably use most often, default configuration is below.
+
+    Arrch\Arrch::find(
+        $data, // array of multidimensional arrays
+        $options = array(
+            'where'         => array(),
+            'limit'         => 0,
+            'offset'        => 0,
+            'sort_key'      => null, // dot notated array key or object property
+            'sort_order'    => 'ASC' // 'ASC' or 'DESC'
+        ),
+        $key = 'all' // 'all', 'first', 'last', an index of the $data array
+    );
+
 #### Quick Example
 
 Be sure to include the arrch.php file in your script or app.
@@ -42,7 +58,8 @@ We'll use Arrch to try and find Brian using a few conditions that return `true` 
     // Remember that the Arrch class is part of the Arrch namespace
     $results = Arrch\Arrch::find($data, array(
 
-        'where' => array(
+        'sort_key'  => 'name.last',
+        'where'     => array(
             // tests for an exact match (===)
             array('name.first', 'Brian'),
 
@@ -50,9 +67,9 @@ We'll use Arrch to try and find Brian using a few conditions that return `true` 
             array('age', '>', 25),
         ),
 
-    ));
+    ), 'first');
 
-#### Conditions
+#### Where Conditions
 
 Arrch conditions are pretty flexible, and can be thought of like MySQL's `AND`, `OR`, `LIKE`, and `IN` operators. First, a list of valid operators.
 
