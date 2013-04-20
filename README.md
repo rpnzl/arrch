@@ -64,7 +64,7 @@ Second, examples of valid conditions.
     'where' => array(
 
         // OR statement
-        array(array('name.first', likes.color), 'blue'),
+        array(array('name.first', 'likes.color'), 'blue'),
 
         // AND statement, including another condition
         array('age', '>', 25),
@@ -102,10 +102,8 @@ At the very least, it's fun to play around with a simple PHP solution that doesn
 
 ### License
 
-http://opensource.org/licenses/MIT
+[MIT](http://opensource.org/licenses/MIT)
 
 ### Author
-
-Michael Giuliana
 
 Available at [rpnzl.com](http://rpnzl.com), [GitHub](http://www.github.com/rpnzl), and [Twitter](http://www.twitter.com/rpnzldesign).
