@@ -110,8 +110,8 @@ class Arrch
      * Evaluates an object based on an array of conditions
      * passed into the function, formatted like so...
      * 
-     *      array( 'name', 'arlington' );
-     *      array( 'name', '!=', 'arlington' );
+     *      array('city', 'arlington');
+     *      array('city', '!=', 'arlington');
      * 
      * @param   arr   $data         The array of objects or associative arrays to search.
      * @param   arr   $conditions   The conditions to evaluate against.
@@ -254,38 +254,31 @@ class Arrch
                 if (!in_array($array[1], static::$operators)) {
                     trigger_error('Operator "'.$array[1].'" is not valid.', E_USER_ERROR);
                 } else {
-                    if (is_null($array[2])
-                        && is_null($value)
-                        && in_array($array[1], array('==', '===')))
-                    {
-                        $return += 1;
-                    } else {
-                        switch ($array[1]) {
-                            case '==':
-                                $return += ($value == $array[2]) ? 1 : 0;
-                                break;
-                            case '===':
-                                $return += ($value === $array[2]) ? 1 : 0;
-                                break;
-                            case '!=':
-                                $return += ($value != $array[2]) ? 1 : 0;
-                                break;
-                            case '!==':
-                                $return += ($value !== $array[2]) ? 1 : 0;
-                                break;
-                            case '>':
-                                $return += ($value > $array[2]) ? 1 : 0;
-                                break;
-                            case '<':
-                                $return += ($value < $array[2]) ? 1 : 0;
-                                break;
-                            case '>=':
-                                $return += ($value >= $array[2]) ? 1 : 0;
-                                break;
-                            case '<=':
-                                $return += ($value <= $array[2]) ? 1 : 0;
-                                break;
-                        }
+                    switch ($array[1]) {
+                        case '==':
+                            $return += ($value == $array[2]) ? 1 : 0;
+                            break;
+                        case '===':
+                            $return += ($value === $array[2]) ? 1 : 0;
+                            break;
+                        case '!=':
+                            $return += ($value != $array[2]) ? 1 : 0;
+                            break;
+                        case '!==':
+                            $return += ($value !== $array[2]) ? 1 : 0;
+                            break;
+                        case '>':
+                            $return += ($value > $array[2]) ? 1 : 0;
+                            break;
+                        case '<':
+                            $return += ($value < $array[2]) ? 1 : 0;
+                            break;
+                        case '>=':
+                            $return += ($value >= $array[2]) ? 1 : 0;
+                            break;
+                        case '<=':
+                            $return += ($value <= $array[2]) ? 1 : 0;
+                            break;
                     }
                 }
             }
