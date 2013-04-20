@@ -17,8 +17,7 @@ namespace Arrch;
  * allows psuedo-queries of large arrays.
  * 
  */
-interface Exception {}
-class UnexpectedValueException extends \UnexpectedValueException implements Exception {}
+
 class Arrch
 {
     /**
@@ -40,7 +39,7 @@ class Arrch
     /**
      * @var  arr  $operators  A list of valid operators for comparisons.
      */
-    public static $operators = array('=', '==', '===', '!=', '!==', '>', '<', '>=', '<=', '~');
+    public static $operators = array('==', '===', '!=', '!==', '>', '<', '>=', '<=', '~');
 
     /**
      * This method combines the functionality of the where() and sort() methods,
@@ -121,7 +120,9 @@ class Arrch
     public static function where(array $data, array $conditions = array())
     {
         foreach ($conditions as $condition) {
-            if (is_array($condition)) {
+            if (!is_array($condition)) {
+                trigger_error('Condition '.var_export($condition, true).' must be an array!', E_USER_ERROR);
+            } else {
                 array_map(function ($item, $key) use (&$data, $condition) {
                     $return = 0;
                     $operator = array_key_exists(2, $condition) ? $condition[1] : '===';
@@ -160,8 +161,6 @@ class Arrch
                         unset($data[$key]);
                     }
                 }, $data, array_keys($data));
-            } else {
-                throw new UnexpectedValueException('Condition '.var_export($condition, true).' must be an array!');
             }
         }
         return $data;
@@ -214,13 +213,7 @@ class Arrch
 
         // no key
         } else {
-            if (is_array($item)) {
-                foreach ($item as $child) {
-                    $results[] = $child;
-                }
-            } else {
-                $results[] = $item;
-            }
+            $results[] = $item;
         }
         return $results;
     }
@@ -241,52 +234,59 @@ class Arrch
         $return = 0;
         foreach ($array[0] as $value) {
             if ($array[1] === '~') {
-                // If the variables don't immediately match
+                // Check if variables loosely match right away
                 if ($value != $array[2]) {
                     if (is_string($value) && is_string($array[2])) {
-                        return stristr($value, $array[2]);
-                    } elseif (is_array($value) && is_array($array[2])) {
-                        throw new UnexpectedValueException('Cannot compare arrays!');
-                    } elseif (is_object($value) && is_object($array[2])) {
-                        throw new UnexpectedValueException('Cannot compare objects!');
-                    } elseif (gettype($value) !== gettype($array[2])) {
-                        return false;
-                    } else {
-                        return false;
+                        $return += stristr($value, $array[2]) ? 1 : 0;
+                    } elseif (is_null($value) && is_null($array[2])) {
+                        $return += 1;
+                    } elseif (is_array($value) || is_object($value)) {
+                        $return += stristr(var_export($value, true), $array[2]) ? 1 : 0;
                     }
                 } else {
-                    return true;
+                    $return += 1;
                 }
             } else {
-                if (in_array($array[1], static::$operators)) {
-                    switch ($array[1]) {
-                        case '==':
-                            $return += ($value == $array[2]) ? 1 : 0;
-                            break;
-                        case '===':
-                            $return += ($value === $array[2]) ? 1 : 0;
-                            break;
-                        case '!=':
-                            $return += ($value != $array[2]) ? 1 : 0;
-                            break;
-                        case '!==':
-                            $return += ($value !== $array[2]) ? 1 : 0;
-                            break;
-                        case '>':
-                            $return += ($value > $array[2]) ? 1 : 0;
-                            break;
-                        case '<':
-                            $return += ($value < $array[2]) ? 1 : 0;
-                            break;
-                        case '>=':
-                            $return += ($value >= $array[2]) ? 1 : 0;
-                            break;
-                        case '<=':
-                            $return += ($value <= $array[2]) ? 1 : 0;
-                            break;
-                    }
+                if (is_array($value) || is_object($value)) {
+                    trigger_error('Cannot compare object of type '.strtoupper(gettype($value)).' with the "'.$array[1].'" operator.', E_USER_WARNING);
+                }
+
+                if (!in_array($array[1], static::$operators)) {
+                    trigger_error('Operator "'.$array[1].'" is not valid.', E_USER_ERROR);
                 } else {
-                    throw new UnexpectedValueException('Comparison operator is not valid.');
+                    if (is_null($array[2])
+                        && is_null($value)
+                        && in_array($array[1], array('==', '===')))
+                    {
+                        $return += 1;
+                    } else {
+                        switch ($array[1]) {
+                            case '==':
+                                $return += ($value == $array[2]) ? 1 : 0;
+                                break;
+                            case '===':
+                                $return += ($value === $array[2]) ? 1 : 0;
+                                break;
+                            case '!=':
+                                $return += ($value != $array[2]) ? 1 : 0;
+                                break;
+                            case '!==':
+                                $return += ($value !== $array[2]) ? 1 : 0;
+                                break;
+                            case '>':
+                                $return += ($value > $array[2]) ? 1 : 0;
+                                break;
+                            case '<':
+                                $return += ($value < $array[2]) ? 1 : 0;
+                                break;
+                            case '>=':
+                                $return += ($value >= $array[2]) ? 1 : 0;
+                                break;
+                            case '<=':
+                                $return += ($value <= $array[2]) ? 1 : 0;
+                                break;
+                        }
+                    }
                 }
             }
         }
