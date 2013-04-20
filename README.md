@@ -92,7 +92,7 @@ You may be wondering about the tilde (~) operator. That one is comparable to MyS
 
     )
 
-#### Limitations
+### Limitations
 
 Use this library in large-scale production environments at your own risk. Processing large arrays in runtime memory is a slow process, and you could experience major hangups when dealing with huge amounts of data. In those instances, why not stick with a legitimate database interface and solution like the PHP core extensions for MySQL, PostgreSQL, MongoDB, etc. and associated, more mature abstracted database libraries.
 
@@ -100,13 +100,12 @@ Arrch may find it's a niche in smaller-scale, flat-file storage environments. Of
 
 At the very least, it's fun to play around with a simple PHP solution that doesn't require MySQL. Just be honest with yourself about your project's requirements *before* you begin, and don't code yourself into a hole!
 
-#### License
+### License
 
 http://opensource.org/licenses/MIT
 
-#### Author
+### Author
 
-* Michael Giuliana
-* [rpnzl.com](http://rpnzl.com)
-* [github.com/rpnzl](http://www.github.com/rpnzl)
-* [@rpnzldesign](http://www.twitter.com/rpnzldesign)
+Michael Giuliana
+
+Available at [rpnzl.com](http://rpnzl.com), [GitHub](http://www.github.com/rpnzl), and [Twitter](http://www.twitter.com/rpnzldesign).
