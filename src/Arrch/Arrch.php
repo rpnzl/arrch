@@ -308,18 +308,20 @@ class Arrch
         $options = array();
         foreach ($args as $o) {
             $options = array_merge($options, $o);
-            if (count($where) === 0) {
-                $where = $o['where'];
-            } else {
-                foreach ($o['where'] as $oc) {
-                    $matches = 0;
-                    foreach ($where as $wc) {
-                        if ($oc == $wc) {
-                            $matches += 1;
+            if (isset($o['where'])) {
+                if (count($where) === 0) {
+                    $where = $o['where'];
+                } else {
+                    foreach ($o['where'] as $oc) {
+                        $matches = 0;
+                        foreach ($where as $wc) {
+                            if ($oc == $wc) {
+                                $matches += 1;
+                            }
                         }
-                    }
-                    if ($matches === 0) {
-                        $where[] = $oc;
+                        if ($matches === 0) {
+                            $where[] = $oc;
+                        }
                     }
                 }
             }
