@@ -293,4 +293,38 @@ class Arrch
         }
         return $return;
     }
+
+    /**
+     * Recursive array merge for options arrays to eliminate duplicates
+     * in a smart manner using a variable number of array arguments.
+     * 
+     * @param   arr  Various options arrays.
+     * @return  arr  The merged array.
+     */
+    public static function merge()
+    {
+        $args = func_get_args();
+        $where = array();
+        $options = array();
+        foreach ($args as $o) {
+            $options = array_merge($options, $o);
+            if (count($where) === 0) {
+                $where = $o['where'];
+            } else {
+                foreach ($o['where'] as $oc) {
+                    $matches = 0;
+                    foreach ($where as $wc) {
+                        if ($oc == $wc) {
+                            $matches += 1;
+                        }
+                    }
+                    if ($matches === 0) {
+                        $where[] = $oc;
+                    }
+                }
+            }
+        }
+        $options['where'] = $where;
+        return $options;
+    }
 }
