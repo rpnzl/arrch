@@ -53,7 +53,7 @@ class Arrch
      */
     public static function find(array $data, array $options = array(), $key = 'all')
     {
-        $options = array_merge(static::$defaults, $options);
+        $options = static::merge(static::$defaults, $options);
         $data = static::where($data, $options['where']);
         $data = $options['sort_key'] ? static::sort($data, $options['sort_key'], $options['sort_order']) : $data;
         $data = array_slice($data, $options['offset'], ($options['limit'] == 0) ? null : $options['limit'], true);
