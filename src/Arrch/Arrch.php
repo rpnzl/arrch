@@ -39,7 +39,7 @@ class Arrch
     /**
      * @var  arr  $operators  A list of valid operators for comparisons.
      */
-    public static $operators = array('==', '===', '!=', '!==', '>', '<', '>=', '<=', '~');
+    public static $operators = array('==', '===', '!=', '!==', '>', '<', '>=', '<=', '~', '!~');
 
     /**
      * This method combines the functionality of the where() and sort() methods,
@@ -147,9 +147,15 @@ class Arrch
                     } elseif (is_array($search_value)) {
                         // single key, array of query values
                         $value = Arrch::extractValues($item, $condition[0]);
+                        $c = 0;
                         foreach ($search_value as $query_val) {
-                            $return += Arrch::compare(array($value, $operator, $query_val)) ? 1 : 0;
+                            $c += Arrch::compare(array($value, $operator, $query_val)) ? 1 : 0;
                         }
+                        // Negate options that don't pass all negative assertions
+                        if (in_array($operator, array('!==', '!=', '!~')) && $c < count($search_value)) {
+                            $c = 0;
+                        }
+                        $return += $c;
                     } else {
                         // single key, single value
                         $value = Arrch::extractValues($item, $condition[0]);
@@ -253,6 +259,14 @@ class Arrch
                     }
                 } else {
                     $return += 1;
+                }
+            } elseif ($array[1] === '!~') {
+                if (is_string($value) && is_string($array[2])) {
+                    $return += !stristr($value, $array[2]) ? 1 : 0;
+                } elseif (is_null($value) && is_null($array[2])) {
+                    $return += 0;
+                } elseif (is_array($value) || is_object($value)) {
+                    $return += !stristr(var_export($value, true), $array[2]) ? 1 : 0;
                 }
             } else {
                 if (is_array($value) || is_object($value)) {
